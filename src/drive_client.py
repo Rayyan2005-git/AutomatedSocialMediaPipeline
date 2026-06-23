@@ -24,7 +24,10 @@ class DriveClient:
             return [
                 {'id': 'dummy_id_1', 'name': 'tech_gadget_1.jpg', 'mimeType': 'image/jpeg'},
                 {'id': 'dummy_id_2', 'name': 'lifestyle_pic.jpg', 'mimeType': 'image/jpeg'},
-                {'id': 'dummy_id_3', 'name': 'wellness_morning.png', 'mimeType': 'image/png'}
+                {'id': 'dummy_id_3', 'name': 'wellness_morning.png', 'mimeType': 'image/png'},
+                {'id': 'dummy_id_4', 'name': 'monday_motivation_quote.jpg', 'mimeType': 'image/jpeg'},
+                {'id': 'dummy_id_5', 'name': 'photo_minimalist-product_1.jpg', 'mimeType': 'image/jpeg'},
+                {'id': 'dummy_id_6', 'name': 'photo_lifestyle-in-use_1.jpg', 'mimeType': 'image/jpeg'}
             ]
 
         results = []

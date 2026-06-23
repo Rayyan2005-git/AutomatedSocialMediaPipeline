@@ -19,17 +19,21 @@ The selector pulls photos from a specified Google Drive folder that match the cu
    Copy `.env.example` to `.env` and fill in the required values:
    - `GOOGLE_APPLICATION_CREDENTIALS`: Path to your Google Service Account JSON file.
    - `DRIVE_FOLDER_ID`: The ID of the Google Drive folder containing the photos.
+   - `SPREADSHEET_ID`: The ID of the Google Sheet containing your content calendar.
+   - `SHEET_RANGE`: The range to read (default: `Sheet1!A:B`).
 
-### Theme Configuration
+### Theme Configuration (Google Sheets)
 
-Themes are configured in `config/themes.json`. The keys are weekdays, and the values are lists of keywords.
+The pipeline dynamically reads themes for the exact date from a Google Sheet.
+The sheet must have exact ISO dates (`YYYY-MM-DD`) in the first column and the theme in the second column.
 
 Example:
-```json
-{
-  "Monday": ["motivation", "sale"]
-}
-```
+| Date       | Theme               |
+|------------|----------------------|
+| 2026-06-24 | minimalist-product   |
+
+**Strict Matching:** 
+If the current date is missing from the sheet, or if the Theme cell is empty, the pipeline will **fail loudly** and skip the run. It will not guess or fall back to a default theme.
 
 ### Usage
 
