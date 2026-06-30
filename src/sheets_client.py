@@ -16,11 +16,11 @@ class SheetsClient:
         if not self.service:
             print("Mock mode: Returning dummy Google Sheet data.")
             return [
-                ["Date", "Theme"],
-                ["2026-06-24", "minimalist-product"],
-                ["2026-06-25", "lifestyle-in-use"],
-                ["2026-06-26", "bright-colors"],
-                ["2026-06-27", ""], # Empty theme test
+                ["Date", "Theme", "Generation Prompt"],
+                ["2026-06-24", "minimalist-product", "Product on a clean white marble podium, soft studio lighting"],
+                ["2026-06-25", "gifting-occasion", "An adult's hands wrapping this toy as a gift, warm cozy room, holiday lighting"],
+                ["2026-06-26", "lifestyle-shelf", "Product displayed on a stylish wooden shelf, plants in background"],
+                ["2026-06-27", "", ""], # Empty theme test
             ]
 
         try:

@@ -20,15 +20,22 @@ class SheetThemeSelector:
             
             # Check if Date column exists and matches
             if len(row) > 0 and row[0].strip() == target_str:
-                # We found the date. Now check the theme.
+                # We found the date. Now check the theme and prompt.
                 if len(row) > 1 and row[1].strip():
-                    return row[1].strip(), None
+                    theme = row[1].strip()
                 else:
-                    return None, f"Theme cell is empty for date {target_str}."
+                    return None, None, f"Theme cell is empty for date {target_str}."
+                    
+                if len(row) > 2 and row[2].strip():
+                    prompt = row[2].strip()
+                else:
+                    return None, None, f"Generation Prompt cell is empty for date {target_str}."
+                    
+                return theme, prompt, None
         
-        return None, f"Date {target_str} not found in the Google Sheet."
+        return None, None, f"Date {target_str} not found in the Google Sheet."
 
-    def filter_files(self, files, theme):
+    def filter_files(self, files, theme, prompt):
         """
         Filters files matching the exact theme in their name.
         Matches are case-insensitive.
@@ -41,6 +48,7 @@ class SheetThemeSelector:
             name_lower = f['name'].lower()
             if theme.lower() in name_lower:
                 f['matched_theme'] = theme
+                f['generation_prompt'] = prompt
                 matched_files.append(f)
                     
         return matched_files

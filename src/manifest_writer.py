@@ -21,6 +21,7 @@ class ManifestWriter:
                 "drive_file_id": f['id'],
                 "local_path": f.get('local_path', ''),
                 "matched_theme": f.get('matched_theme', ''),
+                "generation_prompt": f.get('generation_prompt', ''),
                 "mime_type": f['mimeType'],
                 "file_name": f['name']
             })

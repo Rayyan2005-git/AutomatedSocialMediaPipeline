@@ -29,20 +29,20 @@ def main():
 
     # Fetch themes from Google Sheets
     spreadsheet_id = os.environ.get("SPREADSHEET_ID", "dummy_spreadsheet_id")
-    sheet_range = os.environ.get("SHEET_RANGE", "Sheet1!A:B")
+    sheet_range = os.environ.get("SHEET_RANGE", "Sheet1!A:C")
     
     print(f"Fetching themes from Google Sheet ID: {spreadsheet_id}, Range: {sheet_range}")
     sheets_client = SheetsClient()
     sheet_data = sheets_client.get_sheet_data(spreadsheet_id, sheet_range)
     
     selector = SheetThemeSelector(sheet_data)
-    theme, error_msg = selector.get_theme_for_date(target_date)
+    theme, prompt, error_msg = selector.get_theme_for_date(target_date)
 
     if error_msg:
         print(f"ERROR: {error_msg} Skipping run.")
         sys.exit(1)
 
-    print(f"Theme to search: '{theme}'")
+    print(f"Theme to search: '{theme}', Prompt: '{prompt}'")
 
     # Initialize Drive Client
     drive_folder_id = os.environ.get("DRIVE_FOLDER_ID", "dummy_folder_id")
@@ -54,7 +54,7 @@ def main():
     print(f"Found {len(all_photos)} photos total.")
 
     # Filter photos
-    matched_photos = selector.filter_files(all_photos, theme)
+    matched_photos = selector.filter_files(all_photos, theme, prompt)
     print(f"Matched {len(matched_photos)} photos against theme '{theme}'.")
 
     # Download photos

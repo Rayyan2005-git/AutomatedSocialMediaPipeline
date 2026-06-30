@@ -28,6 +28,7 @@ def main():
     
     for item in manifest.get('files', []):
         theme = item.get('matched_theme')
+        prompt = item.get('generation_prompt', theme) # Fallback to theme if missing
         original_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', item.get('local_path')))
         
         if not os.path.exists(original_path):
@@ -38,7 +39,7 @@ def main():
         enhanced_path = os.path.abspath(os.path.join(enhanced_dir, f"enhanced_{file_name}"))
         
         # 1. Generate Scene
-        result_path = enhancer.generate_scene(original_path, theme, enhanced_path)
+        result_path = enhancer.generate_scene(original_path, prompt, enhanced_path)
         
         if result_path == "POLICY_REJECTED":
             item['phase2'] = {
@@ -71,7 +72,7 @@ def main():
         # 5. Extend Manifest Item
         item['phase2'] = {
             "generatedPath": os.path.relpath(final_path, start=os.path.join(os.path.dirname(__file__), '..')).replace('\\', '/'),
-            "generationPrompt": f"{theme}, high quality contextual ambient background...",
+            "generationPrompt": prompt,
             "fidelityCheckPassed": fidelity_passed,
             "policyRejected": False,
             "caption": caption,

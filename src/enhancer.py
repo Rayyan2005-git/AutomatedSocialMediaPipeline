@@ -8,18 +8,17 @@ class Enhancer:
         self.api_key = api_key
         self.url = "https://image-api.photoroom.com/v2/edit"
 
-    def generate_scene(self, input_image_path, theme, output_image_path):
-        """Calls Photoroom API to generate an ambient background based on theme."""
+    def generate_scene(self, input_image_path, prompt, output_image_path):
+        """Calls Photoroom API to generate an ambient background based on prompt."""
         if not self.api_key:
             # Fallback mock mode for testing without keys
-            print(f"Mock mode: Enhancing {input_image_path} with theme {theme}")
+            print(f"Mock mode: Enhancing {input_image_path} with prompt {prompt}")
             # Just copy the original to output to simulate a generated image
             img = Image.open(input_image_path)
             img.save(output_image_path)
             return output_image_path
 
-        # Generate prompt targeted at ambient backgrounds instead of literal child scenes
-        prompt = f"{theme}, high quality contextual ambient background, professional studio lighting, 8k, photorealistic, blurred background, aesthetic environment"
+        # Use the direct prompt from the Google Sheet
         
         print(f"Calling Photoroom API for {input_image_path}...")
         
