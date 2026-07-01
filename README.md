@@ -20,16 +20,16 @@ The selector pulls photos from a specified Google Drive folder that match the cu
    - `GOOGLE_APPLICATION_CREDENTIALS`: Path to your Google Service Account JSON file.
    - `DRIVE_FOLDER_ID`: The ID of the Google Drive folder containing the photos.
    - `SPREADSHEET_ID`: The ID of the Google Sheet containing your content calendar.
-   - `SHEET_RANGE`: The range to read (default: `Sheet1!A:B`).
+   - `SHEET_RANGE`: The range to read (default: `Sheet1!A:C`).
    - `PHOTOROOM_API_KEY`: API Key for Photoroom Background Generation (Needed for Phase 2).
 
 ### Theme Configuration (Google Sheets)
 
-The pipeline dynamically reads themes for the exact date from a Google Sheet.
-The sheet must have exact ISO dates (`YYYY-MM-DD`) in the first column and the theme in the second column.
+The pipeline dynamically reads themes and exact generation prompts for the exact date from a Google Sheet.
+The sheet must have exact ISO dates (`YYYY-MM-DD`) in the first column, the theme keyword in the second column, and the exact scene-generation prompt in the third column.
 
 **Strict Matching:** 
-If the current date is missing from the sheet, or if the Theme cell is empty, the pipeline will **fail loudly** and skip the run. It will not guess or fall back to a default theme.
+If the current date is missing from the sheet, or if the Theme or Generation Prompt cells are empty, the pipeline will **fail loudly** and skip the run. It will not guess or fall back to a default theme.
 
 ### Usage
 
@@ -75,11 +75,12 @@ The final output is saved to `output/manifest.json`.
       "drive_file_id": "dummy_id_5",
       "local_path": "output/downloads/photo_minimalist-product_1.jpg",
       "matched_theme": "minimalist-product",
+      "generation_prompt": "Product on a clean white marble podium, soft studio lighting",
       "mime_type": "image/jpeg",
       "file_name": "photo_minimalist-product_1.jpg",
       "phase2": {
         "generatedPath": "output/enhanced/enhanced_photo_minimalist-product_1.jpg",
-        "generationPrompt": "minimalist-product, high quality contextual ambient background...",
+        "generationPrompt": "Product on a clean white marble podium, soft studio lighting",
         "fidelityCheckPassed": true,
         "policyRejected": false,
         "caption": "Keep it simple and stylish. Elevate your space with this clean design. ✨\n\n#minimalistproduct #product #newarrival #musthave",
