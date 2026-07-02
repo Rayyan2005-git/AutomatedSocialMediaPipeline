@@ -1,0 +1,22 @@
+{
+  "date": "2026-07-02",
+  "theme": "test-theme",
+  "items": [
+    {
+      "driveFileId": "dummy_id_1",
+      "fileType": "image",
+      "localPath": "test-assets/truck.jpg",
+      "matchedTheme": "test-theme",
+      "generatedPath": "test-assets/truck.jpg",
+      "generationPrompt": "test prompt",
+      "fidelityCheckPassed": true,
+      "caption": "Test caption for automation pipeline \u00e2\u0153\u00a8",
+      "hashtags": [
+        "#test",
+        "#automation"
+      ],
+      "aspectRatio": "1:1",
+      "uploadStatus": "dry_run"
+    }
+  ]
+}
