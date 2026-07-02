@@ -29,10 +29,11 @@ class Uploader:
         print(f"  -> Uploading to GCS bucket: {self.gcs_bucket_name}/{blob_name}")
         blob.upload_from_filename(local_path)
         
-        print("  -> Making GCS object public...")
-        blob.make_public()
+        print("  -> Generating Signed URL...")
+        import datetime
+        public_url = blob.generate_signed_url(version="v4", expiration=datetime.timedelta(minutes=15), method="GET")
         
-        return blob.public_url, blob_name
+        return public_url, blob_name
 
     def delete_from_gcs(self, blob_name):
         """Deletes the object from GCS to save storage space."""
