@@ -16,7 +16,9 @@
         "#automation"
       ],
       "aspectRatio": "1:1",
-      "uploadStatus": "dry_run"
+      "uploadStatus": "dry_run",
+      "uploadError": "RetryError[<Future at 0x25f38ac0e10 state=finished raised UploadError>]",
+      "postId": "17861815497647556"
     }
   ]
 }

@@ -36,17 +36,17 @@ def main():
     # Determine schema format (Phase 2 nested vs flat dummy)
     items = manifest.get('files', manifest.get('items', []))
     
-    imgbb_key = os.environ.get("IMGBB_API_KEY")
+    gcs_bucket = os.environ.get("GCS_BUCKET_NAME")
     ig_token = os.environ.get("IG_ACCESS_TOKEN")
     ig_account = os.environ.get("IG_BUSINESS_ACCOUNT_ID")
     
     uploader = None
     if args.live:
         print("Running in LIVE mode. Real network calls will be made.")
-        if not all([imgbb_key, ig_token, ig_account]):
-            print("ERROR: Missing required environment variables (IMGBB_API_KEY, IG_ACCESS_TOKEN, IG_BUSINESS_ACCOUNT_ID).")
+        if not all([gcs_bucket, ig_token, ig_account]):
+            print("ERROR: Missing required environment variables (GCS_BUCKET_NAME, IG_ACCESS_TOKEN, IG_BUSINESS_ACCOUNT_ID).")
             sys.exit(1)
-        uploader = Uploader(imgbb_key, ig_token, ig_account)
+        uploader = Uploader(gcs_bucket, ig_token, ig_account)
     else:
         print("Running in DRY-RUN mode. No real network calls will be made.")
         

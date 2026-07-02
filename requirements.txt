@@ -6,3 +6,4 @@ requests
 opencv-python
 Pillow
 tenacity
+google-cloud-storage

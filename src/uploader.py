@@ -1,34 +1,48 @@
 import os
 import requests
-import base64
 from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type
+from google.cloud import storage
 
 class UploadError(Exception):
     pass
 
 class Uploader:
-    def __init__(self, imgbb_api_key, ig_access_token, ig_business_account_id):
-        self.imgbb_api_key = imgbb_api_key
+    def __init__(self, gcs_bucket_name, ig_access_token, ig_business_account_id):
+        self.gcs_bucket_name = gcs_bucket_name
         self.ig_access_token = ig_access_token
         self.ig_business_account_id = ig_business_account_id
+        try:
+            self.storage_client = storage.Client()
+        except Exception as e:
+            print(f"Warning: Could not initialize Google Cloud Storage client. {e}")
+            self.storage_client = None
 
-    def upload_to_imgbb(self, local_path):
-        """Uploads a local image to ImgBB and returns the public URL."""
-        if not self.imgbb_api_key:
-            raise UploadError("IMGBB_API_KEY is not set.")
+    def upload_to_gcs(self, local_path):
+        """Uploads a local image to Google Cloud Storage and returns the public URL."""
+        if not self.storage_client:
+            raise UploadError("Google Cloud Storage client is not initialized.")
             
-        with open(local_path, "rb") as file:
-            url = "https://api.imgbb.com/1/upload"
-            payload = {
-                "key": self.imgbb_api_key,
-                "image": base64.b64encode(file.read()).decode('utf-8')
-            }
-            response = requests.post(url, data=payload)
-            
-            if response.status_code == 200:
-                return response.json()['data']['url']
-            else:
-                raise UploadError(f"ImgBB upload failed: {response.text}")
+        bucket = self.storage_client.bucket(self.gcs_bucket_name)
+        blob_name = os.path.basename(local_path)
+        blob = bucket.blob(blob_name)
+        
+        print(f"  -> Uploading to GCS bucket: {self.gcs_bucket_name}/{blob_name}")
+        blob.upload_from_filename(local_path)
+        
+        print("  -> Making GCS object public...")
+        blob.make_public()
+        
+        return blob.public_url, blob_name
+
+    def delete_from_gcs(self, blob_name):
+        """Deletes the object from GCS to save storage space."""
+        try:
+            bucket = self.storage_client.bucket(self.gcs_bucket_name)
+            blob = bucket.blob(blob_name)
+            blob.delete()
+            print(f"  -> Cleaned up GCS object: {blob_name}")
+        except Exception as e:
+            print(f"  -> Warning: Failed to clean up GCS object {blob_name}: {e}")
 
     @retry(
         wait=wait_exponential(multiplier=1, min=2, max=10),
@@ -74,15 +88,17 @@ class Uploader:
             raise UploadError(f"IG Media Publish failed: {data}")
 
     def post_to_instagram(self, local_path, caption):
-        """End-to-end process: ImgBB -> IG Create -> IG Publish."""
-        print(f"  -> Uploading {local_path} to ImgBB...")
-        public_url = self.upload_to_imgbb(local_path)
-        print(f"  -> ImgBB URL: {public_url}")
+        """End-to-end process: GCS -> IG Create -> IG Publish -> GCS Delete."""
+        public_url, blob_name = self.upload_to_gcs(local_path)
+        print(f"  -> GCS Public URL: {public_url}")
         
-        print("  -> Creating Instagram media container...")
-        creation_id = self.create_ig_media_container(public_url, caption)
-        
-        print("  -> Publishing to Instagram...")
-        post_id = self.publish_ig_media(creation_id)
-        
-        return post_id
+        try:
+            print("  -> Creating Instagram media container...")
+            creation_id = self.create_ig_media_container(public_url, caption)
+            
+            print("  -> Publishing to Instagram...")
+            post_id = self.publish_ig_media(creation_id)
+            return post_id
+        finally:
+            # Always attempt to clean up the GCS object, even if IG fails
+            self.delete_from_gcs(blob_name)
