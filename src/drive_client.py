@@ -17,23 +17,36 @@ class DriveClient:
             print("Running in mock mode. Please set GOOGLE_APPLICATION_CREDENTIALS to a valid service account JSON file.")
             self.service = None
 
-    def list_photos(self, folder_id):
-        """Lists only photo files in the specified Drive folder."""
+    def list_photos(self, folder_id, theme=None):
+        """Lists only photo files in the specified Drive folder or Theme subfolder."""
         if not self.service:
             print("Mock mode: Returning dummy photo list.")
-            return [
-                {'id': 'dummy_id_1', 'name': 'tech_gadget_1.jpg', 'mimeType': 'image/jpeg'},
-                {'id': 'dummy_id_2', 'name': 'lifestyle_pic.jpg', 'mimeType': 'image/jpeg'},
-                {'id': 'dummy_id_3', 'name': 'wellness_morning.png', 'mimeType': 'image/png'},
-                {'id': 'dummy_id_4', 'name': 'monday_motivation_quote.jpg', 'mimeType': 'image/jpeg'},
-                {'id': 'dummy_id_5', 'name': 'photo_minimalist-product_1.jpg', 'mimeType': 'image/jpeg'},
-                {'id': 'dummy_id_6', 'name': 'photo_lifestyle-in-use_1.jpg', 'mimeType': 'image/jpeg'}
-            ]
+            return [], False
+
+        target_folder_id = folder_id
+        is_subfolder = False
+        
+        # If a theme is provided, try to find a subfolder matching the theme
+        if theme:
+            folder_query = f"'{folder_id}' in parents and mimeType = 'application/vnd.google-apps.folder' and name = '{theme}' and trashed = false"
+            try:
+                folder_response = self.service.files().list(
+                    q=folder_query, spaces='drive', fields='files(id, name)'
+                ).execute()
+                subfolders = folder_response.get('files', [])
+                if subfolders:
+                    target_folder_id = subfolders[0]['id']
+                    is_subfolder = True
+                    print(f"Found theme subfolder: '{theme}' (ID: {target_folder_id})")
+                else:
+                    print(f"Warning: No subfolder named '{theme}' found. Defaulting to root folder.")
+            except Exception as e:
+                print(f"Warning: Error searching for subfolder: {e}")
 
         results = []
         page_token = None
-        # Query: only images, in the specific folder, not trashed
-        query = f"'{folder_id}' in parents and mimeType contains 'image/' and trashed = false"
+        # Query: only images, in the target folder, not trashed
+        query = f"'{target_folder_id}' in parents and mimeType contains 'image/' and trashed = false"
         
         while True:
             response = self.service.files().list(
@@ -47,7 +60,7 @@ class DriveClient:
             page_token = response.get('nextPageToken')
             if not page_token:
                 break
-        return results
+        return results, is_subfolder
 
     def download_file(self, file_id, local_path):
         """Downloads a file from Drive to the local path."""

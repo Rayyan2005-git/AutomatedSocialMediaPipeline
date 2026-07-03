@@ -67,7 +67,7 @@ def main():
         final_path = enhancer.pad_image(result_path, ratio=aspect_ratio)
         
         # 4. Generate Caption
-        caption = enhancer.generate_caption(theme)
+        caption = enhancer.generate_caption(theme, prompt)
         
         # 5. Extend Manifest Item
         item['phase2'] = {

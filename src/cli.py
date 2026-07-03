@@ -36,13 +36,13 @@ def main():
     sheet_data = sheets_client.get_sheet_data(spreadsheet_id, sheet_range)
     
     selector = SheetThemeSelector(sheet_data)
-    theme, prompt, error_msg = selector.get_theme_for_date(target_date)
+    theme, prompt, product_folder, error_msg = selector.get_theme_for_date(target_date)
 
     if error_msg:
         print(f"ERROR: {error_msg} Skipping run.")
         sys.exit(1)
 
-    print(f"Theme to search: '{theme}', Prompt: '{prompt}'")
+    print(f"Theme to search: '{theme}', Prompt: '{prompt}', Folder: '{product_folder}'")
 
     # Initialize Drive Client
     drive_folder_id = os.environ.get("DRIVE_FOLDER_ID", "dummy_folder_id")
@@ -50,11 +50,11 @@ def main():
 
     # List photos
     print(f"Listing photos in Drive folder: {drive_folder_id}")
-    all_photos = drive_client.list_photos(drive_folder_id)
+    all_photos, is_subfolder = drive_client.list_photos(drive_folder_id, theme=product_folder)
     print(f"Found {len(all_photos)} photos total.")
 
     # Filter photos
-    matched_photos = selector.filter_files(all_photos, theme, prompt)
+    matched_photos = selector.filter_files(all_photos, theme, prompt, is_subfolder=is_subfolder)
     print(f"Matched {len(matched_photos)} photos against theme '{theme}'.")
 
     # Download photos

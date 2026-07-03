@@ -29,7 +29,8 @@ class Enhancer:
                     headers={"x-api-key": self.api_key},
                     data={
                         "background.prompt": prompt,
-                        "shadow.mode": "ai.soft"
+                        "shadow.mode": "ai.soft",
+                        "padding": "0.15"
                     },
                     files={"imageFile": f}
                 )
@@ -107,15 +108,33 @@ class Enhancer:
             
         return image_path
 
-    def generate_caption(self, theme):
-        """Generates a theme-aware caption and hashtags."""
-        captions = {
-            "minimalist-product": "Keep it simple and stylish. Elevate your space with this clean design. ✨",
-            "kids-playtime": "Spark joy and imagination! The perfect addition to any playroom. 🎨🧸",
-            "lifestyle-in-use": "Designed for your everyday life. See it in action! 💫",
-            "bright-colors": "Add a pop of color to your day! Bold, bright, and beautiful. 🌈"
-        }
+    def generate_caption(self, theme, prompt):
+        """Generates a theme-aware caption and hashtags using Gemini AI."""
+        from google import genai
         
-        caption = captions.get(theme.lower(), f"Check out this amazing product for your {theme} needs! ✨")
-        hashtags = f"#{theme.replace('-', '')} #product #newarrival #musthave"
-        return f"{caption}\n\n{hashtags}"
+        gemini_api_key = os.environ.get("GEMINI_API_KEY")
+        if not gemini_api_key or gemini_api_key == "your_gemini_api_key_here":
+            print("No GEMINI_API_KEY found, falling back to basic caption.")
+            return f"Check out this amazing product for your {theme} needs! ✨\n\n#{theme.replace('-', '').replace(' ', '')} #product #newarrival #musthave"
+            
+        try:
+            client = genai.Client(api_key=gemini_api_key)
+            
+            ai_prompt = (
+                f"Write a highly engaging, luxury-brand Instagram caption for a product. "
+                f"The product's theme is '{theme}'. The visual vibe is described as: '{prompt}'. "
+                f"Include 3-5 relevant emojis and 5-7 popular hashtags. "
+                f"Keep it under 3 short paragraphs. No generic marketing speak, make it feel authentic."
+            )
+            
+            response = client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=ai_prompt,
+            )
+            if response.text:
+                return response.text.strip()
+        except Exception as e:
+            print(f"Gemini API Error: {e}")
+            
+        # Fallback
+        return f"Check out this amazing product for your {theme} needs! ✨\n\n#{theme.replace('-', '').replace(' ', '')} #product #newarrival #musthave"
