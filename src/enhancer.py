@@ -1,81 +1,49 @@
 import os
-import requests
-import cv2
 from PIL import Image, ImageOps
+from google import genai
 
 class Enhancer:
-    def __init__(self, api_key):
-        self.api_key = api_key
-        self.url = "https://image-api.photoroom.com/v2/edit"
+    def __init__(self):
+        self.gemini_api_key = os.environ.get("GEMINI_API_KEY")
 
     def generate_scene(self, input_image_path, prompt, output_image_path):
-        """Calls Photoroom API to generate an ambient background based on prompt."""
-        if not self.api_key:
-            # Fallback mock mode for testing without keys
+        """Calls Gemini Imagen 3 to generate a brand new image based on the prompt."""
+        if not self.gemini_api_key or self.gemini_api_key == "your_gemini_api_key_here":
             print(f"Mock mode: Enhancing {input_image_path} with prompt {prompt}")
             # Just copy the original to output to simulate a generated image
             img = Image.open(input_image_path)
+            if img.mode in ("RGBA", "P"):
+                img = img.convert("RGB")
             img.save(output_image_path)
             return output_image_path
 
-        # Use the direct prompt from the Google Sheet
-        
-        print(f"Calling Photoroom API for {input_image_path}...")
+        print(f"Calling Gemini Imagen 3 for prompt: '{prompt}'...")
         
         try:
-            with open(input_image_path, "rb") as f:
-                response = requests.post(
-                    self.url,
-                    headers={"x-api-key": self.api_key},
-                    data={
-                        "background.prompt": prompt,
-                        "shadow.mode": "ai.soft",
-                        "padding": "0.15"
-                    },
-                    files={"imageFile": f}
-                )
+            client = genai.Client(api_key=self.gemini_api_key)
             
-            if response.status_code == 200:
-                with open(output_image_path, "wb") as out_f:
-                    out_f.write(response.content)
+            result = client.models.generate_images(
+                model='imagen-3.0-generate-001',
+                prompt=prompt,
+                config=dict(
+                    number_of_images=1,
+                    output_mime_type="image/jpeg",
+                    aspect_ratio="3:4" # 3:4 is natively supported and close to Instagram's 4:5
+                )
+            )
+            
+            if result.generated_images:
+                generated_image = result.generated_images[0]
+                with open(output_image_path, "wb") as f:
+                    f.write(generated_image.image.image_bytes)
+                print("Successfully generated image with Gemini Imagen 3.")
                 return output_image_path
             else:
-                print(f"Error {response.status_code}: {response.text}")
-                
-                # Check for policy rejections
-                if "policy" in response.text.lower() or response.status_code in [403, 400]:
-                    print("Policy rejection detected. Skipping this image.")
-                    return "POLICY_REJECTED"
-                
+                print("Error: Gemini returned no images.")
                 return None
         except Exception as e:
-            print(f"Exception during API call: {e}")
+            print(f"Exception during Gemini Image Generation: {e}")
             return None
-
-    def check_fidelity(self, original_path, enhanced_path, min_matches=50):
-        """
-        Uses ORB feature matching to ensure the product foreground is still present and undistorted.
-        Since Photoroom composites the exact product on top, feature matching will easily find the product.
-        """
-        print("Running fidelity check (ORB Feature Matching)...")
-        img1 = cv2.imread(original_path, cv2.IMREAD_GRAYSCALE)
-        img2 = cv2.imread(enhanced_path, cv2.IMREAD_GRAYSCALE)
-        
-        if img1 is None or img2 is None:
-            return False
-            
-        orb = cv2.ORB_create()
-        kp1, des1 = orb.detectAndCompute(img1, None)
-        kp2, des2 = orb.detectAndCompute(img2, None)
-        
-        if des1 is None or des2 is None:
-            return False
-            
-        bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
-        matches = bf.match(des1, des2)
-        
-        print(f"Found {len(matches)} matching features.")
-        return len(matches) > min_matches
 
     def pad_image(self, image_path, ratio="4:5"):
         """Pads an image with white borders to fit the exact aspect ratio (e.g., for Instagram)."""
@@ -110,15 +78,12 @@ class Enhancer:
 
     def generate_caption(self, theme, prompt):
         """Generates a theme-aware caption and hashtags using Gemini AI."""
-        from google import genai
-        
-        gemini_api_key = os.environ.get("GEMINI_API_KEY")
-        if not gemini_api_key or gemini_api_key == "your_gemini_api_key_here":
+        if not self.gemini_api_key or self.gemini_api_key == "your_gemini_api_key_here":
             print("No GEMINI_API_KEY found, falling back to basic caption.")
             return f"Check out this amazing product for your {theme} needs! ✨\n\n#{theme.replace('-', '').replace(' ', '')} #product #newarrival #musthave"
             
         try:
-            client = genai.Client(api_key=gemini_api_key)
+            client = genai.Client(api_key=self.gemini_api_key)
             
             ai_prompt = (
                 f"Write a highly engaging, luxury-brand Instagram caption for a product. "
