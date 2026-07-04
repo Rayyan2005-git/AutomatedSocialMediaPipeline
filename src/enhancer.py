@@ -7,8 +7,10 @@ class Enhancer:
         self.gemini_api_key = os.environ.get("GEMINI_API_KEY")
 
     def generate_scene(self, input_image_path, prompt, output_image_path):
-        """Calls Gemini Imagen 3 to generate a brand new image based on the prompt."""
-        if not self.gemini_api_key or self.gemini_api_key == "your_gemini_api_key_here":
+        """Calls Photoroom API to generate a scene around the source image."""
+        photoroom_api_key = os.environ.get("PHOTOROOM_API_KEY")
+        
+        if not photoroom_api_key or photoroom_api_key == "your_photoroom_api_key_here":
             print(f"Mock mode: Enhancing {input_image_path} with prompt {prompt}")
             # Just copy the original to output to simulate a generated image
             img = Image.open(input_image_path)
@@ -17,32 +19,34 @@ class Enhancer:
             img.save(output_image_path)
             return output_image_path
 
-        print(f"Calling Gemini Imagen 3 for prompt: '{prompt}'...")
+        print(f"Calling Photoroom API for background replacement...")
         
         try:
-            client = genai.Client(api_key=self.gemini_api_key)
+            import requests
+            url = "https://image-api.photoroom.com/v2/edit"
+            headers = {"x-api-key": photoroom_api_key}
             
-            result = client.models.generate_images(
-                model='imagen-3.0-generate-001',
-                prompt=prompt,
-                config=dict(
-                    number_of_images=1,
-                    output_mime_type="image/jpeg",
-                    aspect_ratio="3:4" # 3:4 is natively supported and close to Instagram's 4:5
-                )
-            )
+            # Use 'background.prompt' to instruct Photoroom on the background scene
+            data = {
+                "background.prompt": prompt,
+                "padding": "0.15",
+                "outputSize": "1000x1250" # roughly 4:5
+            }
             
-            if result.generated_images:
-                generated_image = result.generated_images[0]
-                with open(output_image_path, "wb") as f:
-                    f.write(generated_image.image.image_bytes)
-                print("Successfully generated image with Gemini Imagen 3.")
+            with open(input_image_path, "rb") as f:
+                files = {"imageFile": f}
+                response = requests.post(url, headers=headers, data=data, files=files)
+            
+            if response.status_code == 200:
+                with open(output_image_path, "wb") as out_file:
+                    out_file.write(response.content)
+                print("Successfully generated image with Photoroom.")
                 return output_image_path
             else:
-                print("Error: Gemini returned no images.")
+                print(f"Error {response.status_code}: {response.text}")
                 return None
         except Exception as e:
-            print(f"Exception during Gemini Image Generation: {e}")
+            print(f"Exception during Photoroom Image Generation: {e}")
             return None
 
     def pad_image(self, image_path, ratio="4:5"):

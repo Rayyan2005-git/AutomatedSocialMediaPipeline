@@ -4,7 +4,7 @@
 
 This repository contains a fully automated, end-to-end social media pipeline. The project is broken down into three phases: 
 1. **Selection (Phase 1):** Connects to Google Sheets for the content calendar and Google Drive to pull the corresponding product images.
-2. **Enhancement (Phase 2):** Connects to the Photoroom AI API to generate premium lifestyle backgrounds around your product.
+2. **Enhancement (Phase 2):** Connects to the Photoroom AI API to generate premium lifestyle backgrounds around your product, and the Google Gemini 2.5 Flash API to write engaging luxury-brand captions.
 3. **Upload (Phase 3):** Connects to Google Cloud Storage (GCS) to temporarily host the image, and then pushes it directly to your Instagram Feed via the Instagram Graph API.
 
 ---
@@ -38,8 +38,9 @@ DRIVE_FOLDER_ID=your_drive_folder_id_here
 SPREADSHEET_ID=your_google_sheet_id_here
 SHEET_RANGE=Sheet1!A:C
 
-# Phase 2: Photoroom AI
+# Phase 2: Photoroom AI & Gemini
 PHOTOROOM_API_KEY=your_photoroom_api_key_here
+GEMINI_API_KEY=your_gemini_api_key_here
 
 # Phase 3: GCS & Instagram API
 GCS_BUCKET_NAME=your_gcs_bucket_name_here
@@ -66,12 +67,12 @@ python src/cli.py --date 2026-07-03
 
 ## Phase 2: Enhancer (Scene Generation)
 
-The enhancer reads the manifest, takes the original product photo, and generates a rich contextual background based on the matched theme using the **Photoroom API**. 
+The enhancer reads the manifest, takes the original product photo, and generates a rich contextual background based on the matched theme using the **Photoroom API**. It then generates a luxury-brand Instagram caption using the **Gemini 2.5 Flash API**.
 
 **Features:**
 - **Photoroom Integration**: Generates ambient/lifestyle scenes while mathematically preserving 100% of the original foreground product.
-- **Fidelity Check**: Uses OpenCV (ORB Feature Matching) to verify the original product remains undistorted in the generated image. Fails safely if the product is lost.
-- **Formatting**: Automatically pads the resulting image to a perfect `4:5` aspect ratio for Instagram.
+- **Gemini Captions**: Generates context-aware, engaging captions complete with emojis and hashtags.
+- **Formatting**: Automatically pads the resulting image to a perfect `4:5` aspect ratio for Instagram (1000x1250).
 
 **Usage:**
 ```bash

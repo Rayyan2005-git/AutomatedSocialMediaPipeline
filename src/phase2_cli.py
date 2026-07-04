@@ -37,7 +37,7 @@ def main():
         file_name = os.path.basename(original_path)
         enhanced_path = os.path.abspath(os.path.join(enhanced_dir, f"enhanced_{file_name}"))
         
-        # 1. Generate Scene with Gemini Imagen 3
+        # 1. Generate Scene with Photoroom
         result_path = enhancer.generate_scene(original_path, prompt, enhanced_path)
         
         if not result_path:
@@ -48,7 +48,7 @@ def main():
             }
             continue
             
-        # 2. Fidelity Check Removed (Gemini generates from scratch)
+        # 2. Fidelity Check Removed (Photoroom handles preservation)
         fidelity_passed = True 
         
         # 3. Crop/Pad
